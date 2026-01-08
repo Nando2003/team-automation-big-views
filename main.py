@@ -3,7 +3,8 @@ from time import sleep
 from big_views import start
 from big_views.types import FlowSpec
 from big_views.widgets.text_step_widget import TextStepSpec, TextStepWidget
-
+from big_views.widgets.form_step_widget import FormStepSpec, FormStepWidget, FormInput
+from PySide6.QtWidgets import QLineEdit
 
 def on_finish(ctx, logger):
     logger.info('Robô finalizado com sucesso!')
@@ -12,11 +13,23 @@ def on_finish(ctx, logger):
 flow = FlowSpec(
     name='Exemplo de Robô',
     steps=[
-        TextStepSpec(
-            key='user_input',
-            title='Digite algo:',
-            widget_cls=TextStepWidget,
-            placeholder='Seu texto aqui...',
+        FormStepSpec(
+            key='login_step',
+            title='Login',
+            inputs=[
+                FormInput(
+                    key='username',
+                    label='Nome de Usuário',
+                    placeholder='Digite seu nome de usuário',
+                ),
+                FormInput(
+                    key='password',
+                    label='Senha',
+                    placeholder='Digite sua senha',
+                    echo_mode=QLineEdit.EchoMode.Password,
+                ),
+            ],
+            widget_cls=FormStepWidget,
         )
     ],
     on_finish=[on_finish],

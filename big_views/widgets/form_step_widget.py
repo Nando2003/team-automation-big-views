@@ -21,6 +21,8 @@ class FormInput:
     key: str
     label: str
     placeholder: str = field(default='')
+    max_length: int = field(default=255)
+    echo_mode: QLineEdit.EchoMode = field(default=QLineEdit.EchoMode.Normal)
 
 
 @dataclass(frozen=True)
@@ -59,6 +61,8 @@ class FormStepWidget(QWidget):
             edit = QLineEdit()
             edit.setProperty('role', 'form_input')
             edit.setPlaceholderText(inp.placeholder)
+            edit.setMaxLength(inp.max_length)
+            edit.setEchoMode(inp.echo_mode)
 
             self._inputs[inp.key] = edit
             form.addRow(lbl, edit)
