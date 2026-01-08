@@ -1,7 +1,9 @@
+from time import sleep
+
 from big_views import start
 from big_views.types import FlowSpec
 from big_views.widgets.text_step_widget import TextStepSpec, TextStepWidget
-from time import sleep
+
 
 def on_finish(ctx, logger):
     logger.info('Robô finalizado com sucesso!')
