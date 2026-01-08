@@ -20,6 +20,7 @@ from big_views.types import StepSpec
 
 @dataclass(frozen=True)
 class FileStepSpec(StepSpec):
+    help_text: str = field(default='')
     dialog_title: str = field(default='Selecionar arquivo')
     file_filter: str = field(default='All Files (*)')
 
@@ -35,6 +36,13 @@ class FileStepWidget(QWidget):
         title = QLabel(spec.title)
         title.setProperty('role', 'step_title')
         title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+
+        help_label = None
+        if spec.help_text.strip():
+            help_label = QLabel(spec.help_text)
+            help_label.setProperty('role', 'step_help')
+            help_label.setWordWrap(True)
+            help_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         self.input = QLineEdit()
         self.input.setProperty('role', 'file_input')
@@ -73,6 +81,11 @@ class FileStepWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(title)
+
+        if help_label is not None:
+            layout.addItem(QSpacerItem(0, 6, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed))
+            layout.addWidget(help_label)
+
         layout.addItem(QSpacerItem(0, 12, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed))
         layout.addWidget(scroll, 1)
 

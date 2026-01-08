@@ -1,11 +1,9 @@
 from time import sleep
-from typing import Unpack
-
-from PySide6.QtWidgets import QLineEdit
 
 from big_views import start
-from big_views.types import FinishFnKwargs, FlowSpec
-from big_views.widgets.form_step_widget import FormInput, FormStepSpec, FormStepWidget
+from big_views.types import FlowSpec
+from big_views.widgets.file_step_widget import FileStepSpec, FileStepWidget
+from big_views.widgets.text_step_widget import TextStepSpec, TextStepWidget
 
 
 def on_finish(context, logger, **kwargs):
@@ -13,32 +11,26 @@ def on_finish(context, logger, **kwargs):
     sleep(3)  # Simula algum processamento final
     print('Contexto final:', context)
     print('Kwargs finais:', kwargs)
-    status = kwargs.get('status')
-    status('Robô finalizado com sucesso!')
     sleep(3)
 
 
 flow = FlowSpec(
     name='Exemplo de Robô',
     steps=[
-        FormStepSpec(
-            key='login_step',
-            title='Login',
-            inputs=[
-                FormInput(
-                    key='username',
-                    label='Nome de Usuário',
-                    placeholder='Digite seu nome de usuário',
-                ),
-                FormInput(
-                    key='password',
-                    label='Senha',
-                    placeholder='Digite sua senha',
-                    echo_mode=QLineEdit.EchoMode.Password,
-                ),
-            ],
-            widget_cls=FormStepWidget,
-        )
+        FileStepSpec(
+            key='input_file',
+            title='Selecione um arquivo de entrada',
+            help_text='Por favor, escolha o arquivo que deseja processar.',
+            dialog_title='Escolha o arquivo de entrada',
+            file_filter='Text Files (*.txt);;All Files (*)',
+            widget_cls=FileStepWidget,
+        ),
+        TextStepSpec(
+            key='comments',
+            title='Comentários adicionais',
+            placeholder='Insira quaisquer comentários adicionais aqui...',
+            widget_cls=TextStepWidget,
+        ),
     ],
     on_finish=[on_finish],
 )
