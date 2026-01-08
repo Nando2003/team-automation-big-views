@@ -31,6 +31,12 @@ class PipelineWorker(QObject):
             total = len(self.pipeline)
             self.logger.info('Pipeline iniciado (%d etapas)', total)
 
+            def report_status(msg: str) -> None:
+                self.status.emit(msg)
+
+            def report_progress(pct: int) -> None:
+                self.progress.emit(pct)
+
             self.progress.emit(0)
             self.status.emit('Iniciando')
 
@@ -42,7 +48,7 @@ class PipelineWorker(QObject):
                 self.status.emit(etapa_txt)
                 self.progress.emit(pct)
 
-                fn(self.ctx, self.logger)
+                fn(self.ctx, self.logger, report_status, report_progress)
 
             self.status.emit('Concluído')
             self.progress.emit(100)
