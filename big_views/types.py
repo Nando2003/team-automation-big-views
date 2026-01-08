@@ -1,14 +1,30 @@
 from dataclasses import dataclass, field
 from logging import Logger
-from typing import Any, Callable, Optional, Type
+from typing import Any, Callable, Optional, Protocol, Type, TypedDict, Unpack
 
 from PySide6.QtWidgets import QWidget
 
-StatusCb = Callable[[str], None]
-ProgressCb = Callable[[int], None]
-
 Validator = Callable[[Any], tuple[bool, str]]
-FinishFn = Callable[[dict[str, Any], Logger, StatusCb, ProgressCb], None]
+
+
+class FinishFn(Protocol):
+    def __name__(self) -> str: ...
+
+    def __call__(
+        self,
+        context: dict[str, Any],
+        logger: Logger,
+        **kwargs: Unpack['FinishFnKwargs'],
+    ) -> None: ...
+
+
+class FinishFnKwargs(TypedDict):
+    status: Callable[[str], None]
+    progress: Callable[[int], None]
+    progress_percentage: int
+    step_of: str
+    step_name: str
+    full_step_name: str
 
 
 @dataclass(frozen=True)

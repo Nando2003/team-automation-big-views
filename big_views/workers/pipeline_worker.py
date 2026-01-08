@@ -1,3 +1,4 @@
+import inspect
 import traceback
 from logging import Logger
 from typing import Any, List
@@ -25,30 +26,51 @@ class PipelineWorker(QObject):
         self.pipeline = pipeline
         self.logger = logger
 
+    def _call_step(
+        self,
+        fn: FinishFn,
+        progress_percentage: int,
+        step_of: str,
+        step_name: str,
+        full_step_name: str,
+    ) -> None:
+        sig = inspect.signature(fn)
+        params = sig.parameters
+
+        kwargs: dict[str, Any] = {}
+
+        if 'kwargs' in params:
+            kwargs = {
+                'status': self.status.emit,
+                'progress': self.progress.emit,
+                'progress_percentage': progress_percentage,
+                'step_of': step_of,
+                'step_name': step_name,
+                'full_step_name': full_step_name,
+            }
+
+        fn(self.ctx, self.logger, **kwargs)
+
     @Slot()
     def run(self):
         try:
             total = len(self.pipeline)
             self.logger.info('Pipeline iniciado (%d etapas)', total)
 
-            def report_status(msg: str) -> None:
-                self.status.emit(msg)
-
-            def report_progress(pct: int) -> None:
-                self.progress.emit(pct)
-
             self.progress.emit(0)
             self.status.emit('Iniciando')
 
             for i, fn in enumerate(self.pipeline, start=1):
                 pct = int((i - 1) / total * 100)
-                etapa_txt = f'Etapa {i} de {total}: {fn.__name__}'
+                step_of = f'Etapa {i} de {total}:'
+                step_name = f'{fn.__name__}'
+                full_step_name = f'{step_of} {step_name}'
 
-                self.logger.info(etapa_txt)
-                self.status.emit(etapa_txt)
+                self.logger.info(full_step_name)
+                self.status.emit(full_step_name)
                 self.progress.emit(pct)
 
-                fn(self.ctx, self.logger, report_status, report_progress)
+                self._call_step(fn, pct, step_of, step_name, full_step_name)
 
             self.status.emit('Concluído')
             self.progress.emit(100)
