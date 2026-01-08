@@ -4,6 +4,7 @@ from typing import Any, List
 
 from PySide6.QtCore import QObject, Signal, Slot
 
+from big_views.exceptions.pipeline_expected_error import PipelineExceptedError
 from big_views.types import FinishFn
 
 
@@ -48,7 +49,12 @@ class PipelineWorker(QObject):
             self.logger.info('Pipeline concluído com sucesso')
             self.finished.emit(self.ctx)
 
-        except Exception:
+        except Exception as e:
             tb = traceback.format_exc()
-            self.logger.exception('Erro no pipeline')
-            self.error.emit(tb)
+            self.logger.warning('Erro no pipeline: %s', tb)
+
+            if isinstance(e, PipelineExceptedError):
+                popup_msg = e.popup_message
+                self.error.emit(popup_msg)
+            else:
+                self.error.emit(tb)
