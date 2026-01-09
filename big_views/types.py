@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
 from logging import Logger
-from typing import Any, Callable, Optional, Protocol, Type, TypedDict, Unpack
+from typing import Any, Awaitable, Callable, Optional, Protocol, Type, TypedDict, Union, Unpack
 
 from PySide6.QtWidgets import QWidget
 
 Validator = Callable[[Any], tuple[bool, str]]
+FinishReturn = Union[None, Awaitable[None]]
 
 
 class FinishFn(Protocol):
@@ -15,7 +16,7 @@ class FinishFn(Protocol):
         context: dict[str, Any],
         logger: Logger,
         **kwargs: Unpack['FinishFnKwargs'],
-    ) -> None: ...
+    ) -> FinishReturn: ...
 
 
 class FinishFnKwargs(TypedDict):

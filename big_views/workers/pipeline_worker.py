@@ -1,12 +1,15 @@
 import inspect
 import traceback
 from logging import Logger
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
 from PySide6.QtCore import QObject, Signal, Slot
 
 from big_views.exceptions.pipeline_expected_error import PipelineExceptedError
 from big_views.types import FinishFn
+
+if TYPE_CHECKING:
+    from big_views.workers.async_loop_thread_worker import AsyncLoopThreadWorker as AsyncLoopThread
 
 
 class PipelineWorker(QObject):
@@ -20,11 +23,35 @@ class PipelineWorker(QObject):
         ctx: dict[str, Any],
         pipeline: List[FinishFn],
         logger: Logger,
+        async_loop: 'AsyncLoopThread',
     ):
         super().__init__()
         self.ctx = ctx
         self.pipeline = pipeline
         self.logger = logger
+        self.async_loop = async_loop
+        self.async_loop.start()
+
+    def _build_kwargs(
+        self,
+        fn: FinishFn,
+        progress_percentage: int,
+        step_of: str,
+        step_name: str,
+        full_step_name: str,
+    ) -> dict[str, Any]:
+        sig = inspect.signature(fn)
+        params = sig.parameters
+        if 'kwargs' in params:
+            return {
+                'status': self.status.emit,
+                'progress': self.progress.emit,
+                'progress_percentage': progress_percentage,
+                'step_of': step_of,
+                'step_name': step_name,
+                'full_step_name': full_step_name,
+            }
+        return {}
 
     def _call_step(
         self,
@@ -34,22 +61,12 @@ class PipelineWorker(QObject):
         step_name: str,
         full_step_name: str,
     ) -> None:
-        sig = inspect.signature(fn)
-        params = sig.parameters
+        kwargs = self._build_kwargs(fn, progress_percentage, step_of, step_name, full_step_name)
 
-        kwargs: dict[str, Any] = {}
-
-        if 'kwargs' in params:
-            kwargs = {
-                'status': self.status.emit,
-                'progress': self.progress.emit,
-                'progress_percentage': progress_percentage,
-                'step_of': step_of,
-                'step_name': step_name,
-                'full_step_name': full_step_name,
-            }
-
-        fn(self.ctx, self.logger, **kwargs)
+        if inspect.iscoroutinefunction(fn):
+            self.async_loop.run(fn(self.ctx, self.logger, **kwargs))
+        else:
+            fn(self.ctx, self.logger, **kwargs)
 
     @Slot()
     def run(self):

@@ -21,6 +21,7 @@ from big_views.logger import configure_logger
 from big_views.screens.initial_screen import InitialScreen
 from big_views.screens.loading_screen import LoadingScreen
 from big_views.types import FinishFn, FlowSpec, StepSpec
+from big_views.workers.async_loop_thread_worker import AsyncLoopThreadWorker
 from big_views.workers.pipeline_worker import PipelineWorker
 
 
@@ -38,6 +39,9 @@ class FlowManager(QWidget):
         self.context: dict[str, Any] = {}
         self.steps: list[StepSpec] = []
         self.pipeline: list[FinishFn] = []
+
+        self._async_loop = AsyncLoopThreadWorker()
+        self._async_loop.start()
 
         self._thread: Optional[QThread] = None
         self._worker: Optional[PipelineWorker] = None
@@ -208,7 +212,7 @@ class FlowManager(QWidget):
         ctx_copy = self.context.copy()
 
         self._thread = QThread(self)
-        self._worker = PipelineWorker(ctx_copy, self.pipeline, self.logger)
+        self._worker = PipelineWorker(ctx_copy, self.pipeline, self.logger, self._async_loop)
         self._worker.moveToThread(self._thread)
 
         self._thread.started.connect(self._worker.run)

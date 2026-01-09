@@ -1,3 +1,4 @@
+from asyncio import sleep as async_sleep
 from time import sleep
 
 from big_views import start
@@ -12,6 +13,15 @@ def on_finish(context, logger, **kwargs):
     print('Contexto final:', context)
     print('Kwargs finais:', kwargs)
     sleep(3)
+
+
+async def async_on_finish(context, logger, **kwargs):
+    logger.info('Iniciando finalização assíncrona do robô...')
+    await async_sleep(10)
+    status = kwargs.get('status')
+    if status:
+        status('Finalização assíncrona em progresso...')
+    await async_sleep(10)
 
 
 flow = FlowSpec(
@@ -32,7 +42,7 @@ flow = FlowSpec(
             widget_cls=TextStepWidget,
         ),
     ],
-    on_finish=[on_finish],
+    on_finish=[on_finish, async_on_finish],
 )
 
 start(flow, window_title='Robô de Exemplo')
