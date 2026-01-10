@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "pyinstaller==6.17.0",
     "pyside6==6.9.1",
 ]
 
@@ -20,3 +21,6 @@ include = ["big_views*"]
 
 [tool.setuptools.package-data]
 big_views = ["**/*"]
+
+[project.entry-points."pyinstaller40"]
+hook-dirs = "botflow.__pyinstaller:get_hook_dirs"
