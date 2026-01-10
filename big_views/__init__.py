@@ -1,5 +1,6 @@
 import sys
 from logging import Logger
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtWidgets import QApplication
@@ -7,6 +8,10 @@ from PySide6.QtWidgets import QApplication
 from big_views.helpers.load_font_helpers import load_fonts
 from big_views.manager import FlowManager
 from big_views.types import FlowSpec
+
+
+def get_hook_dirs():
+    return [str(Path(__file__).resolve().with_name('__pyinstaller'))]
 
 
 def start(
